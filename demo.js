@@ -85,19 +85,23 @@ async function getMyVideos() {
     }
 
     console.log("%c[Step 4] Đang dùng Token lấy danh sách video...", "color: #9b59b6;");
-    console.log("Sử dụng Token:", token);
+    resultDiv.innerHTML = `<p>🔄 Đang lấy dữ liệu video thật từ TikTok...</p>`;
+
+    // Dữ liệu Body JSON
+    const requestBody = {
+        // Thử để các trường cơ bản nhất trước
+        "fields": ["id", "title", "play_count", "cover_image_url", "share_url"],
+        "max_count": 10
+    };
 
     try {
         const response = await fetch('https://open.tiktokapis.com/v2/video/list/', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${token.trim()}`, // Trim để tránh dấu cách thừa
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                "fields": "id,title,video_description,create_time,cover_image_url,share_url,embed_html,play_count",
-                "max_count": 10
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
@@ -107,23 +111,29 @@ async function getMyVideos() {
             let html = `<h3>✅ Video thật từ Display API:</h3>`;
             data.data.videos.forEach(video => {
                 html += `
-                    <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                        <strong>ID:</strong> ${video.id}<br>
-                        <strong>Title:</strong> ${video.title || 'Không tiêu đề'}<br>
-                        <strong>Lượt xem:</strong> 
-                        <span style="color: #00b4d8; font-size: 19px; font-weight: bold;">
-                            ${video.play_count.toLocaleString()} views
-                        </span>
+                    <div style="border-bottom: 1px solid #ddd; padding: 15px 0; display: flex; align-items: center;">
+                        <img src="${video.cover_image_url}" style="width: 60px; height: 80px; object-fit: cover; margin-right: 15px; border-radius: 4px;">
+                        <div>
+                            <strong>ID:</strong> ${video.id}<br>
+                            <strong>Title:</strong> ${video.title || 'Không tiêu đề'}<br>
+                            <strong>Lượt xem:</strong> 
+                            <span style="color: #fe2c55; font-size: 19px; font-weight: bold;">
+                                ${video.play_count ? video.play_count.toLocaleString() : 0} views
+                            </span>
+                        </div>
                     </div>`;
             });
             resultDiv.innerHTML = html;
+        } else if (data.error) {
+            // Hiển thị lỗi chi tiết từ TikTok
+            console.error("Lỗi API chi tiết:", data.error);
+            resultDiv.innerHTML = `<p style="color: #dc3545;">❌ Lỗi API: ${data.error.message} (Code: ${data.error.code})</p>`;
         } else {
-            console.warn("Không có video nào được trả về.");
-            resultDiv.innerHTML = `<p>Trống: Không tìm thấy video công khai nào.</p>`;
+            resultDiv.innerHTML = `<p>Trống: Không tìm thấy video công khai nào trên tài khoản này.</p>`;
         }
     } catch (error) {
-        console.error("Lỗi lấy Video:", error);
-        resultDiv.innerHTML = `<p style="color: #dc3545;">❌ Lỗi khi gọi API danh sách video.</p>`;
+        console.error("Lỗi Fetch:", error);
+        resultDiv.innerHTML = `<p style="color: #dc3545;">❌ Lỗi khi gọi API danh sách video. Hãy kiểm tra Console.</p>`;
     }
 }
 
