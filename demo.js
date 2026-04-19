@@ -18,8 +18,11 @@ async function loginWithTikTok() {
 // 2. Đổi Code lấy Access Token (Giữ nguyên)
 async function exchangeCodeForToken(code) {
     const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `<p>🔄 Đang xác thực...</p>`;
+    resultDiv.innerHTML = `<p>🔄 Đang xác thực với TikTok...</p>`;
+
     try {
+        console.log("%c[Step 3] Đang gọi API trao đổi Token...", "color: #3498db;");
+        
         const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -31,14 +34,27 @@ async function exchangeCodeForToken(code) {
                 'redirect_uri': REDIRECT_URI
             })
         });
+
         const data = await response.json();
+        
+        // --- ĐÂY LÀ ĐOẠN LOG TOKEN ---
+        console.log("%c[SUCCESS] Dữ liệu Token nhận về:", "color: #27ae60; font-weight: bold;");
+        console.table(data); // Hiển thị dạng bảng cho dễ nhìn các trường
+        console.log("%cAccess Token của bạn là:", "color: #e67e22; font-weight: bold;");
+        console.log(data.access_token); 
+        // -----------------------------
+
         if (data.access_token) {
             localStorage.setItem('tiktok_access_token', data.access_token);
             window.history.replaceState({}, document.title, window.location.pathname);
-            resultDiv.innerHTML = `<p style="color: #28a745;">✅ Đăng nhập thành công!</p>`;
+            resultDiv.innerHTML = `<p style="color: #28a745;">✅ Đăng nhập thành công! Token đã được log trong Console.</p>`;
+        } else {
+            console.error("Lỗi từ TikTok:", data);
+            resultDiv.innerHTML = `<p style="color: red;">❌ Lỗi: ${data.error_description || 'Không lấy được Token'}</p>`;
         }
     } catch (error) {
-        console.error(error);
+        console.error("Lỗi kết nối:", error);
+        resultDiv.innerHTML = `<p style="color: red;">❌ Lỗi kết nối API.</p>`;
     }
 }
 
