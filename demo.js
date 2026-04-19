@@ -4,10 +4,10 @@ const CLIENT_SECRET = "qsC7y7tF9HFfJlJcEzNI54IasDKo78Do";
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
 const SCOPE = "user.info.basic,video.list";
 
-// Fields yêu cầu mới nhất của bạn
+// Fields chuẩn theo đúng log Postman của bạn
 const REQUEST_FIELDS = ["id", "title", "view_count", "like_count", "comment_count", "share_count", "create_time", "cover_image_url"];
 
-// 1. Chuyển hướng sang TikTok để Login (Giữ nguyên)
+// 1. Chuyển hướng sang TikTok để Login
 async function loginWithTikTok() {
     const state = Math.random().toString(36).substring(7);
     localStorage.setItem('auth_state', state);
@@ -15,14 +15,12 @@ async function loginWithTikTok() {
     window.location.href = authUrl;
 }
 
-// 2. Đổi Code lấy Access Token (Giữ nguyên)
+// 2. Đổi Code lấy Access Token
 async function exchangeCodeForToken(code) {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p>🔄 Đang xác thực với TikTok...</p>`;
 
     try {
-        console.log("%c[Step 3] Đang gọi API trao đổi Token...", "color: #3498db;");
-        
         const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -36,29 +34,21 @@ async function exchangeCodeForToken(code) {
         });
 
         const data = await response.json();
-        
-        // --- ĐÂY LÀ ĐOẠN LOG TOKEN ---
-        console.log("%c[SUCCESS] Dữ liệu Token nhận về:", "color: #27ae60; font-weight: bold;");
-        console.table(data); // Hiển thị dạng bảng cho dễ nhìn các trường
-        console.log("%cAccess Token của bạn là:", "color: #e67e22; font-weight: bold;");
-        console.log(data.access_token); 
-        // -----------------------------
+        console.log("%c[TOKEN LOG]", "color: green; font-weight: bold;", data.access_token);
 
         if (data.access_token) {
             localStorage.setItem('tiktok_access_token', data.access_token);
             window.history.replaceState({}, document.title, window.location.pathname);
-            resultDiv.innerHTML = `<p style="color: #28a745;">✅ Đăng nhập thành công! Token đã được log trong Console.</p>`;
+            resultDiv.innerHTML = `<p style="color: #28a745;">✅ Đăng nhập thành công!</p>`;
         } else {
-            console.error("Lỗi từ TikTok:", data);
             resultDiv.innerHTML = `<p style="color: red;">❌ Lỗi: ${data.error_description || 'Không lấy được Token'}</p>`;
         }
     } catch (error) {
-        console.error("Lỗi kết nối:", error);
         resultDiv.innerHTML = `<p style="color: red;">❌ Lỗi kết nối API.</p>`;
     }
 }
 
-// 3. Lấy danh sách video (Đã cập nhật Fields)
+// 3. Lấy danh sách video (SỬA LẠI URL)
 async function getMyVideos() {
     const token = localStorage.getItem('tiktok_access_token');
     if (!token) return alert("Vui lòng Login trước!");
@@ -66,90 +56,97 @@ async function getMyVideos() {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p>🔄 Đang lấy danh sách video...</p>`;
 
+    // QUAN TRỌNG: Fields phải truyền lên URL (query params)
+    const url = `https://open.tiktokapis.com/v2/video/list/?fields=${REQUEST_FIELDS.join(',')}`;
+
     try {
-        const response = await fetch('https://open.tiktokapis.com/v2/video/list/', {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                "fields": REQUEST_FIELDS,
                 "max_count": 10
             })
         });
 
         const data = await response.json();
+        console.log("Dữ liệu List:", data);
         renderVideoList(data.data?.videos || []);
     } catch (error) {
         resultDiv.innerHTML = `<p style="color: red;">Lỗi: ${error.message}</p>`;
     }
 }
 
-// 4. CHỨC NĂNG MỚI: Lấy view từ URL
+// 4. Lấy view từ URL (SỬA LẠI URL & REGEX)
 async function getVideoByUrl() {
-    const url = document.getElementById('videoUrl').value;
+    const urlInput = document.getElementById('videoUrl').value;
     const token = localStorage.getItem('tiktok_access_token');
     const resultDiv = document.getElementById('result');
 
     if (!token) return alert("Vui lòng Login trước!");
     
-    // Trích xuất ID từ link (ví dụ: .../video/7123456789...)
-    const videoIdMatch = url.match(/\/video\/(\m?(\d+))/);
+    // Sửa Regex: Chỉ lấy chuỗi số ID
+    const videoIdMatch = urlInput.match(/\/video\/(\d+)/);
     if (!videoIdMatch) {
-        return alert("Link video không đúng định dạng! (Phải có dạng tiktok.com/@user/video/ID)");
+        return alert("Link không đúng! Phải có dạng: .../video/75835489...");
     }
     const videoId = videoIdMatch[1];
 
     resultDiv.innerHTML = `<p>🔍 Đang quét video ID: ${videoId}...</p>`;
 
+    // QUAN TRỌNG: Truyền fields lên URL giống Postman bạn đã test
+    const apiUrl = `https://open.tiktokapis.com/v2/video/query/?fields=${REQUEST_FIELDS.join(',')}`;
+
     try {
-        const response = await fetch('https://open.tiktokapis.com/v2/video/query/', {
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                "filters": { "video_ids": [videoId] },
-                "fields": REQUEST_FIELDS
+                "filters": { "video_ids": [videoId] }
             })
         });
 
         const data = await response.json();
-        if (data.data && data.data.videos && data.data.videos.length > 0) {
+        console.log("Dữ liệu Query:", data);
+
+        if (data.data?.videos && data.data.videos.length > 0) {
             renderVideoList(data.data.videos);
         } else {
-            resultDiv.innerHTML = `<p>❌ Không tìm thấy thông tin video này hoặc video không thuộc tài khoản của bạn.</p>`;
+            resultDiv.innerHTML = `<p>❌ Không tìm thấy video. Hãy chắc chắn video này thuộc tài khoản của bạn và đang ở chế độ Công Khai.</p>`;
         }
     } catch (error) {
-        resultDiv.innerHTML = `<p style="color: red;">Lỗi kết nối API.</p>`;
+        resultDiv.innerHTML = `<p style="color: red;">❌ Lỗi kết nối API.</p>`;
     }
 }
 
-// Hàm hiển thị kết quả ra màn hình
+// Hàm hiển thị (Giữ nguyên logic nhưng thêm check dữ liệu)
 function renderVideoList(videos) {
     const resultDiv = document.getElementById('result');
-    if (videos.length === 0) {
-        resultDiv.innerHTML = "<p>Không có dữ liệu.</p>";
+    if (!videos || videos.length === 0) {
+        resultDiv.innerHTML = "<p>Không có video nào để hiển thị.</p>";
         return;
     }
 
     let html = `<h3>📊 Kết quả phân tích:</h3>`;
     videos.forEach(v => {
-        // Lưu ý: TikTok API v2 đôi khi trả về view_count, đôi khi là play_count tùy app permission
-        const views = v.view_count || v.play_count || 0; 
+        // Dựa trên log của bạn, trường trả về là view_count
+        const views = v.view_count !== undefined ? v.view_count : 0;
         
         html += `
-            <div class="video-item" style="border: 1px solid #eee; margin-bottom: 10px; padding: 10px; display: flex;">
-                <img src="${v.cover_image_url}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 8px;">
+            <div class="video-item" style="border: 1px solid #ddd; margin-bottom: 10px; padding: 15px; display: flex; background: white; border-radius: 8px;">
+                <img src="${v.cover_image_url || ''}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 5px;">
                 <div style="margin-left: 15px;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">${v.title || 'Video TikTok'}</div>
-                    <div style="color: #fe2c55; font-size: 20px; font-weight: bold;">👀 ${views.toLocaleString()} views</div>
-                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                        ❤️ ${v.like_count || 0} | 💬 ${v.comment_count || 0} | ↪️ ${v.share_count || 0}
+                    <div style="font-weight: bold; font-size: 16px;">${v.title || 'Video TikTok'}</div>
+                    <div style="color: #fe2c55; font-size: 22px; font-weight: bold; margin: 5px 0;">👀 ${views.toLocaleString()} views</div>
+                    <div style="font-size: 13px; color: #555;">
+                        ❤️ ${v.like_count || 0} Like | 💬 ${v.comment_count || 0} Cmt | ↪️ ${v.share_count || 0} Share
                     </div>
-                    <div style="font-size: 11px; color: #999;">ID: ${v.id}</div>
+                    <div style="font-size: 11px; color: #999; margin-top: 5px;">ID: ${v.id}</div>
                 </div>
             </div>
         `;
@@ -157,13 +154,12 @@ function renderVideoList(videos) {
     resultDiv.innerHTML = html;
 }
 
-// Xử lý load trang (Giữ nguyên)
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     if (code) exchangeCodeForToken(code);
     else {
         const token = localStorage.getItem('tiktok_access_token');
-        if (token) document.getElementById('result').innerHTML = `<p style="color: #28a745;">Sẵn sàng!</p>`;
+        if (token) document.getElementById('result').innerHTML = `<p style="color: #28a745;">✅ Sẵn sàng! Token đã có sẵn.</p>`;
     }
 };
