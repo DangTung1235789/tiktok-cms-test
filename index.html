@@ -1,13 +1,40 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Test TikTok CMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo TikTok Display API - Test CMS</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Test TikTok Video View CMS</h1>
-    <p>Đây là trang test nội bộ để lấy view video TikTok cá nhân.</p>
-    <p>Chỉ dùng cho mục đích phát triển và test.</p>
-    <p>Last updated: April 2026</p>
+    <div class="container">
+        <h1>🎥 TIKTOK DISPLAY API DEMO</h1>
+        <p class="subtitle">Purpose: Test fetching playCount (public views) from my personal TikTok account</p>
+
+        <div class="card">
+            <h2>Step 1: Login with TikTok</h2>
+            <button onclick="loginWithTikTok()" class="btn btn-primary">
+                🔑 Login with TikTok
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>Step 2: Get Videos & PlayCount</h2>
+            <button onclick="getMyVideos()" class="btn btn-success">
+                📊 Fetch Videos and View Counts
+            </button>
+        </div>
+
+        <div id="result" class="result"></div>
+
+        <div class="note">
+            <strong>Note for Demo Video:</strong><br>
+            • This is a personal test application<br>
+            • Using TikTok Display API to fetch playCount (public views)<br>
+            • Data is retrieved from my own TikTok account only
+        </div>
+    </div>
+
+    <script src="demo.js"></script>
 </body>
 </html>
