@@ -27,6 +27,20 @@ h1 {
     margin-bottom: 40px;
 }
 
+.reason-list {
+    text-align: left;
+    max-width: 620px;
+    margin: 15px auto;
+    padding-left: 20px;
+    color: #444;
+    font-size: 16.5px;
+    line-height: 1.8;
+}
+
+.reason-list li {
+    margin-bottom: 8px;
+}
+
 .card {
     background: #f8f9fa;
     padding: 25px;
