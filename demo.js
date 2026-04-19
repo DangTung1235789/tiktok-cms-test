@@ -1,54 +1,50 @@
-// Replace with your real Access Token after app is approved
-const ACCESS_TOKEN = "act.your_access_token_here";  
-
-const HEADERS = {
-    "Authorization": `Bearer ${ACCESS_TOKEN}`,
-    "Content-Type": "application/json"
-};
+// ================== DEMO MODE - For Video Recording ==================
+const ACCESS_TOKEN = "act.your_access_token_here";  // Không quan trọng ở demo mode
 
 async function loginWithTikTok() {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p style="color: #007bff;">🔄 Redirecting to TikTok Login...</p>`;
     
-    alert("Demo Mode:\n\nIn the real demo video, this button will redirect to TikTok OAuth Login.\n\nFor now, we simulate successful login.");
-    
-    resultDiv.innerHTML += `<p style="color: #28a745;">✅ Simulated Login Successful (Access Token is ready)</p>`;
+    setTimeout(() => {
+        resultDiv.innerHTML = `
+            <p style="color: #28a745;">✅ Login Successful!</p>
+            <p>Access Token has been received (simulated for demo).</p>
+        `;
+    }, 800);
 }
 
 async function getMyVideos() {
     const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `<p>🔄 Calling TikTok Display API to fetch videos and playCount...</p>`;
+    resultDiv.innerHTML = `<p>🔄 Calling TikTok Display API...</p>`;
 
-    try {
-        const response = await fetch("https://open.tiktokapis.com/v2/video/list/", {
-            method: "POST",
-            headers: HEADERS,
-            body: JSON.stringify({
-                "fields": ["id", "title", "view_count", "like_count", "comment_count", "share_count"],
-                "max_count": 5
-            })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.data && data.data.videos) {
-            let html = `<h3>✅ Display API Response:</h3>`;
+    // Giả lập chờ API
+    setTimeout(() => {
+        resultDiv.innerHTML = `
+            <h3>✅ Display API Response (Demo Data):</h3>
             
-            data.data.videos.forEach(video => {
-                html += `
-                    <strong>Video ID:</strong> ${video.id}<br>
-                    <strong>Title:</strong> ${video.title || 'No title'}<br>
-                    <strong>PlayCount (Public Views):</strong> 
-                    <span style="color: #00b4d8; font-size: 18px; font-weight: bold;">
-                        ${Number(video.view_count || 0).toLocaleString()} views
-                    </span><br><br>`;
-            });
+            <strong>Video ID:</strong> 7483921456789012345<br>
+            <strong>Title:</strong> Test video for CMS demo<br>
+            <strong>PlayCount (Public Views):</strong> 
+            <span style="color: #00b4d8; font-size: 19px; font-weight: bold;">
+                124,856 views
+            </span><br><br>
 
-            resultDiv.innerHTML = html;
-        } else {
-            resultDiv.innerHTML = `<p style="color: red;">❌ Error: ${data.message || 'Failed to fetch data'}</p>`;
-        }
-    } catch (error) {
-        resultDiv.innerHTML = `<p style="color: red;">❌ Connection Error: ${error.message}</p>`;
-    }
+            <strong>Video ID:</strong> 7483912345678901234<br>
+            <strong>Title:</strong> Another test video<br>
+            <strong>PlayCount (Public Views):</strong> 
+            <span style="color: #00b4d8; font-size: 19px; font-weight: bold;">
+                87,432 views
+            </span><br><br>
+
+            <p style="color: #666; margin-top: 15px;">
+                <strong>Note:</strong> In real implementation, this data comes from TikTok Display API.<br>
+                This is simulated data for demo video only.
+            </p>
+        `;
+    }, 1200);
 }
+
+// Hiển thị thông báo khi load trang
+window.onload = function() {
+    console.log("%cTikTok Display API Demo - Running in Demo Mode", "color: #00b4d8; font-weight: bold;");
+};
