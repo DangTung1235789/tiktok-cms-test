@@ -34,6 +34,8 @@ async function exchangeCodeForToken(code) {
         });
 
         const data = await response.json();
+        // Log toàn bộ để xem cấu trúc phản hồi
+        console.log("%c[FULL DATA LOG]", "color: blue; font-weight: bold;", data);
         console.log("%c[TOKEN LOG]", "color: green; font-weight: bold;", data.access_token);
 
         if (data.access_token) {
