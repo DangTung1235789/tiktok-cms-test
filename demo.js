@@ -2,7 +2,7 @@
 const CLIENT_KEY = "sbawl5wechpgck9vbm";
 const CLIENT_SECRET = "qsC7y7tF9HFfJlJcEzNI54IasDKo78Do";
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
-const SCOPE = "user.info.basic,video.list";
+const SCOPE = "user.info.basic,video.list,video.upload,video.publish";
 
 // Fields chuẩn theo đúng log Postman của bạn
 const REQUEST_FIELDS = ["id", "title", "view_count", "like_count", "comment_count", "share_count", "create_time", "cover_image_url"];
